@@ -1,126 +1,92 @@
-#ifndef __QYAUTHMODULE_CONFIGURATION_H__
-#define __QYAUTHMODULE_CONFIGURATION_H__
-
-
-#pragma warning(disable: 4996)
-#pragma warning(disable: 4786)
-#include <string>
-#include <fstream>
-#include "Infrastructure/Lock.h"
-#include "QAuthClientLibs/QAuthClientApi.h"
+#ifndef __QYAUTHMODULE_AUTH_INTERFACE_H__
+#define __QYAUTHMODULE_AUTH_INTERFACE_H__
 
 
 /**
- * @class						AuthLog
- * @brief						日志类
- * @author						barry
+ * @class					I_AuthSessionEvent
+ * @brief					认证会话事件回调
+ * @detail					该类的指针由I_AuthApi接口进行初始化的时候传入dll,供回调使用
+ * @author					barry
+ * @date					2018/6/14
  */
-class AuthLog : public MLogIOInterface
+class I_AuthSessionEvent
 {
 public:
-	typedef	enum	EnumLogLevel
-	{
-		LV_INFO = 0,			///< 普通日志
-		LV_WARN,				///< 警告日志
-		LV_ERR,					///< 错误日志
-	};
-private:
-	AuthLog();
-
-public:
 	/**
-	 * @brief					获取单健
+	 * @brief				连接建立成功
 	 */
-	static AuthLog&				GetLogger();
-
-public:
-	/**
-	 * @brief					输出信息
-	 */
-	virtual void				WriteInfo( const char* szFormat, ... );
+	virtual void			OnConnected() = 0;
 
 	/**
-	 * @brief					输出警告
+	 * @brief				连接断开
+	 * @param[in]			nErrorCode<0	表示出错
+	 * @param[in]			szErrMsg		错误信息串
 	 */
-	virtual void				WriteWarning( const char* szFormat, ... );
+	virtual void			OnDisconnected( int nErrorCode, const char *szErrMsg ) = 0;
+
+	virtual void			OnRspLogin( int nErrorCode, const char *szErrMsg ) = 0;
 
 	/**
-	 * @brief					输出错误
+	 * @brief				登出响应
+	 * @param[in]			nRequestID		请求号
+	 * @param[in]			nErrorCode<0	表示出错
+	 * @param[in]			szErrMsg		错误信息串
 	 */
-	virtual void				WriteError( const char* szFormat, ... );
-
-protected:
-	CriticalObject				m_objLock;				///< 临界区
-	std::ofstream				m_objLogFile;			///< 日志文件
+	virtual void			OnRspLogout( int nRequestID, int nErrorCode, const char *szErrMsg ) = 0;
 };
 
 
-extern	HMODULE					g_oModule;						///< 当前dll模块变量
-
-
-typedef struct
-{
-	unsigned int				m_nClientType;					///< 客户端类型
-	unsigned int				m_nClientVersion;				///< 客户端版本，主版本、子版本、Build号，32位各用8、12、12位
-	unsigned int				m_nCustomerID;					///< 券商ID
-	unsigned int				m_nServerCount;					///< 认证服务器数量
-	CQAuthServerConfig			m_vctServers[AUTHSERVER_MAX];	///< 认证服务器配置，最多8组
-	bool						m_bIsUseSSL;					///< 是否使用SSL
-	char						m_pszCrtFilename[256];			///< Crt证书
-	char						m_pszPfxFilename[256];			///< Pfx证书
-	char						m_pszPfxPassword[32];			///< Pfx证书密码
-	unsigned int				m_nNetworkTimeOut;				///< 网络通讯超时，单位：秒
-	unsigned int				m_nHeartbeatInterval;			///< 心跳间隔，单位：秒
-	bool						m_nbIsOutputDebugLog;			///< 调试日志
-} T_Auth_Cfg;					///< 认证模块初始化参数结构
-
-
-typedef struct
-{
-	char						m_pszUser[64];					///< 账号
-	char						m_pszPassword[64];				///< 密码
-	unsigned int				m_nPasswordType;				///< 密码类型
-	char						m_pszExtraPassword[64];			///< 扩展密码
-} T_Login_Cfg;
-
 /**
- * @class						Configuration
- * @brief						配置信息
- * @date						2018/6/12
- * @author						barry
+ * @class					I_AuthApi
+ * @brief					认证模块管理api接口
+ * @detail					该接口由DLL导出
+ * @author					barry
+ * @date					2018/6/14
  */
-class Configuration
+class I_AuthApi
 {
-protected:
-	Configuration();
-
 public:
 	/**
-	 * @brief					获取配置对象的单键引用对象
+	 * @brief				初始化认证库
+	 * @param[in]			pEvent			认证会话事件回调接口
+	 * @return				0				成功
 	 */
-	static Configuration&		GetConfig();
+	virtual int				Initialize( I_AuthSessionEvent* pEvent ) = 0;
 
 	/**
-	 * @brief					加载配置项
-	 * @return					==0					成功
-								!=					出错
+	 * @brief				释放认证库资源
 	 */
-    int							Initialize();
+	virtual void			Release() = 0;
 
 	/**
-	 * @brief					释放资源
+	 * @brief				建立连接
+	 * @return				<0				出错
 	 */
-	void						Release();
+	virtual int				Connect() = 0;
 
-public:
 	/**
-	 * @brief					获取认证插件初始化配置信息
-	 * @param[out]				objCfg					获取更新配置信息结构
+	 * @brief				断开连接
 	 */
-	void						FetchAuthConfig( CQAuthClientInput& objCfg );
+	virtual void			Disconnect() = 0;
 
-protected:
-	T_Auth_Cfg					m_tagAuthConfig;				///< 认证模块初始化参数结构
+	/**
+	 * @brief				登录服务器进行认证
+	 * @param[in]			nReqNo			请求ID
+	 * @param[in]			pszUser			用户名
+	 * @param[in]			pszPswd			密码
+	 * @param[in]			pszExtraPswd	扩展密码
+	 * @param[in]			nPswdType		密码类型
+	 * @return				<0				出错
+	 */
+	virtual int				ReqLogin( unsigned int nReqNo, const char* pszUser, const char* pszPswd, const char* pszExtraPswd, unsigned int nPswdType ) = 0;
+
+	/**
+	 * @brief				从服务器登出
+	 * @param[in]			nReqNo			请求ID
+	 * @return				<0				出错
+	 */
+	virtual int				ReqLogout( unsigned int nReqNo ) = 0;
+
 };
 
 

@@ -2,9 +2,10 @@
 #define __QYAUTHMODULE_CONFIGURATION_H__
 
 
+#pragma warning(disable: 4996)
 #pragma warning(disable: 4786)
-#include <vector>
 #include <string>
+#include <fstream>
 #include "Infrastructure/Lock.h"
 #include "QAuthClientLibs/QAuthClientApi.h"
 
@@ -17,9 +18,41 @@
 class AuthLog : public MLogIOInterface
 {
 public:
+	typedef	enum	EnumLogLevel
+	{
+		LV_INFO = 0,			///< 普通日志
+		LV_WARN,				///< 警告日志
+		LV_ERR,					///< 错误日志
+	};
+private:
+	AuthLog();
 
+public:
+	/**
+	 * @brief					获取单健
+	 */
+	static AuthLog&				GetLogger();
+
+public:
+	/**
+	 * @brief					输出信息
+	 */
+	virtual void				WriteInfo( const char* szFormat, ... );
+
+	/**
+	 * @brief					输出警告
+	 */
+	virtual void				WriteWarning( const char* szFormat, ... );
+
+	/**
+	 * @brief					输出错误
+	 */
+	virtual void				WriteError( const char* szFormat, ... );
+
+protected:
+	CriticalObject				m_objLock;				///< 临界区
+	std::ofstream				m_objLogFile;			///< 日志文件
 };
-
 
 
 extern	HMODULE					g_oModule;						///< 当前dll模块变量
@@ -41,6 +74,14 @@ typedef struct
 	bool						m_nbIsOutputDebugLog;			///< 调试日志
 } T_Auth_Cfg;					///< 认证模块初始化参数结构
 
+
+typedef struct
+{
+	char						m_pszUser[64];					///< 账号
+	char						m_pszPassword[64];				///< 密码
+	unsigned int				m_nPasswordType;				///< 密码类型
+	char						m_pszExtraPassword[64];			///< 扩展密码
+} T_Login_Cfg;
 
 /**
  * @class						Configuration

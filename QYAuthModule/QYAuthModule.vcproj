@@ -242,6 +242,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\AuthInterface.h"
+			>
+		</File>
+		<File
 			RelativePath=".\Configuration.cpp"
 			>
 		</File>

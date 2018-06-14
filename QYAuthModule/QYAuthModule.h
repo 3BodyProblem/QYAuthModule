@@ -10,10 +10,10 @@
 extern "C"
 {
 	/**
-	 * @brief								取得工厂对象引用,用于创建/管理/收回内存数据库对象
-	 * @return								返回管理对象的引用
+	 * @brief										获取认证模块管理接口指针
+	 * @return										返回管理对象的引用
 	 */
-	__declspec(dllexport) void		__stdcall		GetFactoryObject();
+	__declspec(dllexport) void		__stdcall		GetAuthApi();
 
 	/**
 	 * @brief								单元测试导出函数

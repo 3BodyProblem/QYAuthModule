@@ -2,6 +2,118 @@
 #include <algorithm>
 #include "Configuration.h"
 #include "Infrastructure/IniFile.h"
+#include "Infrastructure/DateTime.h"
+
+
+///< ----------------------------------- 日志类 ---------------------------------------------------------------
+
+
+AuthLog::AuthLog()
+{
+	std::string			sPath;
+	HMODULE				objModule = NULL;
+    char				pszTmp[1024*8] = { 0 };
+
+    ::GetModuleFileName( objModule, pszTmp, sizeof(pszTmp) );
+    sPath = pszTmp;
+    sPath = sPath.substr( 0, sPath.find(".dll") ) + ".log";
+
+	m_objLogFile.open( sPath.c_str(), std::ios_base::app|std::ios_base::out );
+}
+
+AuthLog& AuthLog::GetLogger()
+{
+	static	AuthLog		obj;
+
+	return obj;
+}
+
+void AuthLog::WriteInfo( const char* szFormat, ... )
+{
+	va_list				valist;
+	int					nLen = 0;
+	char				szsrc[80] = { 0 };
+	char				tempbuf[1024*2] = { 0 };
+	char				pszInfo[1024*2] = { 0 };
+	DateTime			objDateTime = DateTime::Now();
+
+	va_start( valist, szFormat );
+	_vsnprintf( tempbuf, sizeof(tempbuf), szFormat, valist );
+	va_end( valist ); 
+	nLen = ::sprintf( pszInfo, "%d.%d [INF]%s\n", objDateTime.DateToLong(), objDateTime.TimeToLong(), tempbuf );
+
+	if( m_objLogFile.is_open() )
+	{
+		CriticalLock	lock( m_objLock );
+
+		m_objLogFile.write( pszInfo, nLen );
+		m_objLogFile.flush();
+		::printf( "%s", pszInfo );
+	}
+	else
+	{
+		::printf( "|%s", pszInfo );
+	}
+}
+
+void AuthLog::WriteWarning( const char* szFormat, ... )
+{
+	va_list				valist;
+	int					nLen = 0;
+	char				szsrc[80] = { 0 };
+	char				tempbuf[1024*2] = { 0 };
+	char				pszInfo[1024*2] = { 0 };
+	DateTime			objDateTime = DateTime::Now();
+
+	va_start( valist, szFormat );
+	_vsnprintf( tempbuf, sizeof(tempbuf), szFormat, valist );
+	va_end( valist ); 
+	nLen = ::sprintf( pszInfo, "%d.%d [WARN]%s\n", objDateTime.DateToLong(), objDateTime.TimeToLong(), tempbuf );
+
+	if( m_objLogFile.is_open() )
+	{
+		CriticalLock	lock( m_objLock );
+
+		m_objLogFile.write( pszInfo, nLen );
+		m_objLogFile.flush();
+		::printf( "%s", pszInfo );
+	}
+	else
+	{
+		::printf( "|%s", pszInfo );
+	}
+}
+
+void AuthLog::WriteError( const char* szFormat, ... )
+{
+	va_list				valist;
+	int					nLen = 0;
+	char				szsrc[80] = { 0 };
+	char				tempbuf[1024*2] = { 0 };
+	char				pszInfo[1024*2] = { 0 };
+	DateTime			objDateTime = DateTime::Now();
+
+	va_start( valist, szFormat );
+	_vsnprintf( tempbuf, sizeof(tempbuf), szFormat, valist );
+	va_end( valist ); 
+	nLen = ::sprintf( pszInfo, "%d.%d [ERR]%s\n", objDateTime.DateToLong(), objDateTime.TimeToLong(), tempbuf );
+
+	if( m_objLogFile.is_open() )
+	{
+		CriticalLock	lock( m_objLock );
+
+		m_objLogFile.write( pszInfo, nLen );
+		m_objLogFile.flush();
+		::printf( "%s", pszInfo );
+	}
+	else
+	{
+		::printf( "|%s", pszInfo );
+	}
+}
+
+
+///< ----------------------------------- 配置类 ---------------------------------------------------------------
 
 
 HMODULE						g_oModule;
@@ -74,8 +186,6 @@ void Configuration::FetchAuthConfig( CQAuthClientInput& objCfg )
 	///< Pfx证书密码
 	::memcpy( objCfg.PfxPassword, m_tagAuthConfig.m_pszPfxPassword, sizeof(objCfg.PfxPassword) );
 }
-
-
 
 
 
