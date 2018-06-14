@@ -153,6 +153,17 @@ public:
 	 */
 	int						ReqLogout( unsigned int nReqNo );
 
+	/**
+	 * @brief				改登录密码
+	 * @param[in]			nReqNo			请求ID
+	 * @param[in]			pszUserID		用户帐号
+	 * @param[in]			pszOldPswd		旧密码
+	 * @param[in]			pszNewPswd		新密码
+	 * @param[in]			nPswdType		密码类型
+	 * @return				<0				出错
+	 */
+	int						ReqChgPassword( unsigned int nReqNo, const char* pszUserID, const char* pszOldPswd, const char* pszNewPswd, unsigned int nPswdType );
+
 protected:
 	EnumModuleStatus		m_eCurStatus;				///< 模块当前状态
 

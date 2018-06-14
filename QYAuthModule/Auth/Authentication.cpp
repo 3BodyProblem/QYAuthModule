@@ -228,5 +228,27 @@ int Authentication::ReqLogout( unsigned int nReqNo )
 	return -100;
 }
 
+int Authentication::ReqChgPassword( unsigned int nReqNo, const char* pszUserID, const char* pszOldPswd, const char* pszNewPswd, unsigned int nPswdType )
+{
+	CriticalLock			lock( m_objLock );
+
+	if( NULL == m_pCQAClientApi ) {
+		AuthLog::GetLogger().WriteError( "Authentication::ReqChgPassword() : invalid CQAClientApi* pointer" );
+		return -1;
+	}
+
+	if( Authentication::ST_Logined == m_eCurStatus ) {
+		CQAuthChangePassword	tagChgPswd = { 0 };
+
+		::strncpy( tagChgPswd.User, pszUserID, ::strlen(pszUserID) );
+		::strncpy( tagChgPswd.OldPassword, pszOldPswd, ::strlen(pszOldPswd) );
+		::strncpy( tagChgPswd.NewPassword, pszNewPswd, ::strlen(pszNewPswd) );
+		tagChgPswd.PasswordType = nPswdType;
+		return m_pCQAClientApi->ReqLogout( nReqNo );
+	}
+
+	return -100;
+}
+
 
 

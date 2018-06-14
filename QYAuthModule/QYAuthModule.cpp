@@ -4,17 +4,9 @@
 
 extern "C"
 {
-	__declspec(dllexport) void __stdcall  GetFactoryObject()
+	__declspec(dllexport) I_AuthApi* __stdcall  GetSingletonAuthApi()
 	{
-		::printf( "[Version]  1.0.1 \n" );
-
-	}
-
-	__declspec(dllexport) void __stdcall	ExecuteUnitTest()
-	{
-		::printf( "\n\n---------------------- [Begin] -------------------------\n" );
-
-		::printf( "----------------------  [End]  -------------------------\n\n\n" );
+		return &(Authentication::GetAuth());
 	}
 
 }

@@ -39,7 +39,20 @@ public:
 	 * @param[in]			szErrMsg		错误信息串
 	 */
 	virtual void			OnRspLogout( int nRequestID, int nErrorCode, const char *szErrMsg ) = 0;
+
+	/**
+	 * @brief				修改密码响应
+	 * @param[in]			nRequestID		请求号
+	 * @param[in]			nErrorCode<0	表示出错
+	 * @param[in]			szErrMsg		错误信息串
+	 */
+	virtual void			OnRspChangePassword( int nRequestID, int nErrorCode, const char *szErrMsg ) = 0;
 };
+
+
+///< ------------------------------------------------------------------------------------------------------------
+///< 导出API函数
+// __declspec(dllexport) I_AuthApi*		__stdcall		GetSingletonAuthApi();
 
 
 /**
@@ -93,6 +106,17 @@ public:
 	 * @return				<0				出错
 	 */
 	virtual int				ReqLogout( unsigned int nReqNo ) = 0;
+
+	/**
+	 * @brief				修改登录密码
+	 * @param[in]			nReqNo			请求ID
+	 * @param[in]			pszUserID		帐号名
+	 * @param[in]			pszOldPswd		旧密码
+	 * @param[in]			pszNewPswd		新密码
+	 * @param[in]			nPswdType		密码类型
+	 * @return				<0				出错
+	 */
+	virtual int				ReqChgPassword( unsigned int nReqNo, const char* pszUserID, const char* pszOldPswd, const char* pszNewPswd, unsigned int nPswdType ) = 0;
 
 };
 
