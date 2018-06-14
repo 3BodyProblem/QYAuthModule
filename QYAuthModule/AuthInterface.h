@@ -24,7 +24,13 @@ public:
 	 */
 	virtual void			OnDisconnected( int nErrorCode, const char *szErrMsg ) = 0;
 
-	virtual void			OnRspLogin( int nErrorCode, const char *szErrMsg ) = 0;
+	/**
+	 * @brief				登录响应
+	 * @param[in]			nRequestID		请求号
+	 * @param[in]			nErrorCode<0	表示出错
+	 * @param[in]			szErrMsg		错误信息串
+	 */
+	virtual void			OnRspLogin( int nRequestID, int nErrorCode, const char *szErrMsg ) = 0;
 
 	/**
 	 * @brief				登出响应
@@ -60,6 +66,7 @@ public:
 
 	/**
 	 * @brief				建立连接
+	 * @detail				连接参数读配置文件(.ini)
 	 * @return				<0				出错
 	 */
 	virtual int				Connect() = 0;
