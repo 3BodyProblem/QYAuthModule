@@ -16,7 +16,7 @@ extern "C"
 	 * @brief										获取认证模块管理接口指针
 	 * @return										返回管理对象的引用
 	 */
-	__declspec(dllexport) I_AuthApi*	__stdcall	GetSingletonAuthApi();
+	__declspec(dllexport) I_AuthApi*				GetSingletonAuthApi();
 }
 
 

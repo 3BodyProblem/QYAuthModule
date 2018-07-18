@@ -4,7 +4,7 @@
 
 extern "C"
 {
-	__declspec(dllexport) I_AuthApi* __stdcall  GetSingletonAuthApi()
+	__declspec(dllexport) I_AuthApi*   GetSingletonAuthApi()
 	{
 		return &(Authentication::GetAuth());
 	}

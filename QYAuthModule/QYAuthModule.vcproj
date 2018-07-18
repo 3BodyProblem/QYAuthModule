@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libprotobufd.lib Dbghelp.lib iphlpapi.lib QAuthClientD.lib QAuthLibD.lib QXLIB2D.lib"
-				OutputFile="D:\ServiceManager\srvunit\DataCollector4CTPSH_Port31258\$(ProjectName).dll"
+				OutputFile="D:\QYQWin\HQ\Source\TestQYAuth\Debug\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=".\QAuthClientLibs\;.\ProtobufLibs\"
 				GenerateDebugInformation="true"
@@ -140,7 +140,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libprotobuf.lib Dbghelp.lib iphlpapi.lib QAuthClient.lib QAuthLib.lib QXLIB2.lib"
-				OutputFile="D:\ServiceManager\srvunit\DataCollector4CTPSH_Port31258\$(ProjectName).dll"
+				OutputFile="Release\$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=".\QAuthClientLibs\;.\ProtobufLibs\"
 				GenerateDebugInformation="true"
@@ -188,10 +188,30 @@
 				RelativePath=".\Auth\Authentication.h"
 				>
 			</File>
+			<File
+				RelativePath=".\Auth\MQWinSecurityPlugin.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Auth\MQWinSecurityPlugin.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Auth\QWinSecurityPlugin.hpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Infrastructure"
 			>
+			<File
+				RelativePath=".\Infrastructure\CheckCode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Infrastructure\CheckCode.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Infrastructure\DataDump.cpp"
 				>

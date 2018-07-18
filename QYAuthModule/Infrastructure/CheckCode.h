@@ -74,6 +74,10 @@ public:
 	//Md5接力计算方式，注意接力计算与一次计算的值可能不相等待，主要是因为接力计算时不足64位时的系统补了空数据参与计算，接力为保存与一次性计算相同，则每次数据计算长度必须为64的倍数
 	//in_OldMd5Value为上一次的MAC值，lpInBuf为需要计算的数据，iInSize为需要计算的数据长度, szOutBuf为输出的MAC值
 	int  CalMD5(const char in_OldMd5[16], const char * lpInBuf,int iInSize,char szOutBuf[16]);
+
+public:
+	static long ConvertMD5ToStr(const char *pMD5, char *pStr, unsigned long Size);
+	static long ConvertStrToMD5(const char *pStr, char *pMD5, unsigned long Size);
 };
 
 #endif

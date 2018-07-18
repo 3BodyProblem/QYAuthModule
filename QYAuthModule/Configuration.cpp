@@ -11,10 +11,9 @@
 AuthLog::AuthLog()
 {
 	std::string			sPath;
-	HMODULE				objModule = NULL;
     char				pszTmp[1024*8] = { 0 };
 
-    ::GetModuleFileName( objModule, pszTmp, sizeof(pszTmp) );
+    ::GetModuleFileName( g_oModule, pszTmp, sizeof(pszTmp) );
     sPath = pszTmp;
     sPath = sPath.substr( 0, sPath.find(".dll") ) + ".log";
 
@@ -146,29 +145,113 @@ int Configuration::Initialize()
     ::GetModuleFileName( g_oModule, pszTmp, sizeof(pszTmp) );
     sPath = pszTmp;
     sPath = sPath.substr( 0, sPath.find(".dll") ) + ".ini";
-	if( 0 != (nErrCode=oIniFile.load( sPath )) )
-	{
-//		QuoCollector::GetCollector()->OnLog( TLV_ERROR, "Configuration::Initialize() : configuration file isn\'t exist. [%s], errorcode=%d", sPath.c_str(), nErrCode );
+	if( 0 != (nErrCode=oIniFile.load( sPath )) )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invalid configuration file path: %s", sPath.c_str() );
 		return -1;
 	}
 
-	///< 设置： 快照落盘目录(含文件名)
-//	m_sDumpFileFolder = oIniFile.getStringValue( std::string("SRV"), std::string("DumpFolder"), nErrCode );
+	///< 客户端类型
+	m_tagAuthConfig.m_nClientType = oIniFile.getIntValue( std::string("client"), std::string("type"), nErrCode );
 	if( 0 != nErrCode )	{
-//		QuoCollector::GetCollector()->OnLog( TLV_WARN, "Configuration::Initialize() : shutdown dump function." );
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad client type value" );
+		return -2;
 	}
-/*
-	m_nBcBeginTime = oIniFile.getIntValue( std::string("SRV"), std::string("BroadcastBeginTime"), nErrCode );
+
+	///< 客户端版本，主版本、子版本、Build号，32位各用8、12、12位
+	m_tagAuthConfig.m_nClientVersion = oIniFile.getIntValue( std::string("client"), std::string("version"), nErrCode );
 	if( 0 != nErrCode )	{
-		m_nBcBeginTime = 0xffffffff;
-		QuoCollector::GetCollector()->OnLog( TLV_WARN, "Configuration::Initialize() : Topspeed Mode...!" );
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad client version" );
+		return -3;
 	}
-*/
+
+	///< 券商ID
+	m_tagAuthConfig.m_nCustomerID = oIniFile.getIntValue( std::string("client"), std::string("participantid"), nErrCode );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad participantid" );
+		return -4;
+	}
+
+	///< 认证服务器数量
+	m_tagAuthConfig.m_nServerCount = oIniFile.getIntValue( std::string("server"), std::string("count"), nErrCode );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad server count" );
+		return -5;
+	}
+
+	///< 认证服务器配置，最多8组
+	for( int n = 0; n < AUTHSERVER_MAX && n < m_tagAuthConfig.m_nServerCount; n++ ) {
+		std::string		sIPTag = "ip_";
+		std::string		sPortTag = "port_";
+		char			pszTmp[32] = { 0 };
+
+		sIPTag += ::itoa(n, pszTmp, 10);
+		strcpy( m_tagAuthConfig.m_vctServers[n].Host, oIniFile.getStringValue( std::string("server"), sIPTag, nErrCode ).c_str() );
+		if( 0 != nErrCode )	{
+			AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad ip tag(%d)", n );
+			return -100;
+		}
+
+		sPortTag += ::itoa(n, pszTmp, 10);
+		m_tagAuthConfig.m_vctServers[n].Port = oIniFile.getIntValue( std::string("server"), sPortTag, nErrCode );
+		if( 0 != nErrCode )	{
+			AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad port tag(%d)", n );
+			return -101;
+		}
+	}
+
+	///< 网络通讯超时，单位：秒
+	m_tagAuthConfig.m_nNetworkTimeOut = oIniFile.getIntValue( std::string("server"), std::string("timeout"), nErrCode );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad server timeout" );
+		return -6;
+	}
+
+	///< 心跳间隔，单位：秒
+	m_tagAuthConfig.m_nHeartbeatInterval = oIniFile.getIntValue( std::string("server"), std::string("heartbeat"), nErrCode );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad server heart beat" );
+		return -7;
+	}
+
+	///< 调试日志
+	m_tagAuthConfig.m_nbIsOutputDebugLog = true;
+
+	///< 是否使用SSL
+	int	nUseSSL = oIniFile.getIntValue( std::string("server"), std::string("ssl"), nErrCode );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad server heart beat" );
+		return -7;
+	}
+	if( nUseSSL > 0 ) {
+		m_tagAuthConfig.m_bIsUseSSL = true;
+	} else {
+		m_tagAuthConfig.m_bIsUseSSL = false;
+	}
+
+	///< Crt证书
+	strcpy( m_tagAuthConfig.m_pszCrtFilename, oIniFile.getStringValue( std::string("server"), std::string("crtpath"), nErrCode ).c_str() );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad Crt certification path" );
+	}
+
+	///< Pfx证书
+	strcpy( m_tagAuthConfig.m_pszPfxFilename, oIniFile.getStringValue( std::string("server"), std::string("pfxpath"), nErrCode ).c_str() );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad Crt certification path" );
+	}
+
+	///< Pfx证书密码
+	strcpy( m_tagAuthConfig.m_pszPfxPassword, oIniFile.getStringValue( std::string("server"), std::string("pfxpassword"), nErrCode ).c_str() );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad Crt certification path" );
+	}
+
 	return 0;
 }
 
 void Configuration::FetchAuthConfig( CQAuthClientInput& objCfg )
 {
+	objCfg.Logger = &(AuthLog::GetLogger());
 	objCfg.ClientType = m_tagAuthConfig.m_nClientType;						///< 客户端类型
 	objCfg.ClientVersion = m_tagAuthConfig.m_nClientVersion;				///< 客户端版本，主版本、子版本、Build号，32位各用8、12、12位
 	objCfg.CustomerID = m_tagAuthConfig.m_nCustomerID;						///< 券商ID

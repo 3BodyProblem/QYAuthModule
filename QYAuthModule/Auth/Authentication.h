@@ -6,7 +6,46 @@
 #include "../targetver.h"
 #include "../AuthInterface.h"
 #include "../Configuration.h"
+#include "MQWinSecurityPlugin.h"
+#include "QWinSecurityPlugin.hpp"
 #include "../QAuthClientLibs/QAuthClientApi.h"
+
+
+class CQWinSecurityInterface
+{
+public:
+	virtual MQWinSecurityPlugin_Interface * GetQWinSecurityPluginApi() = 0;
+	virtual bool String_Encrypt(const char * lpIn,string& lpOut,const char * lpKey,char * lpErrorInfo,unsigned int uiErrorSize) = 0;
+	virtual bool String_Decrypt(const char * lpIn,string& lpOut,const char * lpKey,char * lpErrorInfo,unsigned int uiErrorSize, int minLen_Ciphertext = 12) = 0;
+	virtual int PBKDF2_SHA256(const char * lpIn, const char * lpKey, int num, char * lpOut, int outlen, char * lpErrorInfo,unsigned int uiErrorSize) = 0;
+};
+
+
+class CQWinSecurity : public CQWinSecurityInterface
+{
+public:
+	CQWinSecurity()
+	{
+		m_Inited = false;
+	};
+	~CQWinSecurity()
+	{
+		Release();
+	};
+
+	bool Init();
+	void Release();
+
+	MQWinSecurityPlugin_Interface * GetQWinSecurityPluginApi();
+
+	bool String_Encrypt(const char * lpIn, string& lpOut,const char * lpKey,char * lpErrorInfo,unsigned int uiErrorSize);
+	bool String_Decrypt(const char * lpIn, string& lpOut,const char * lpKey,char * lpErrorInfo,unsigned int uiErrorSize, int minLen_Ciphertext = 12);
+	int PBKDF2_SHA256(const char * lpIn, const char * lpKey, int num, char * lpOut, int outlen, char * lpErrorInfo,unsigned int uiErrorSize);
+
+	MQWinSecurityPlugin m_MQWinSecurity;
+
+	bool m_Inited;
+};
 
 
 /**
@@ -133,6 +172,11 @@ public:
 	 */
 	void					SetStatus( EnumModuleStatus eStatus );
 
+	/**
+	 * @brief				获取回调指针
+	 */
+	I_AuthSessionEvent*		operator->();
+
 public:
 	/**
 	 * @brief				登录服务器进行认证
@@ -165,6 +209,12 @@ public:
 	int						ReqChgPassword( unsigned int nReqNo, const char* pszUserID, const char* pszOldPswd, const char* pszNewPswd, unsigned int nPswdType );
 
 protected:
+	/**
+	 * @brief				配置登录密码
+	 */
+	void					SetAccount( const char* User, const char* Password );
+
+protected:
 	EnumModuleStatus		m_eCurStatus;				///< 模块当前状态
 
 protected:
@@ -172,6 +222,10 @@ protected:
 	CQAClientApi*			m_pCQAClientApi;			///< 认证插件
 	AuthEventCB				m_objEventCallBack;			///< 认证事件回调
 	I_AuthSessionEvent*		m_pUserNotify;				///< 用户通知
+protected:
+	std::string				m_sLoginUser;				///< 登录名
+	std::string				m_sLoginPswd;				///< 登录密码
+	std::string				m_sLoginMd5Pwd;				///< 登录MD5密码
 };
 
 

@@ -83,6 +83,10 @@ typedef struct
 	char						m_pszExtraPassword[64];			///< À©Õ¹ÃÜÂë
 } T_Login_Cfg;
 
+
+extern HMODULE					g_oModule;
+
+
 /**
  * @class						Configuration
  * @brief						ÅäÖÃÐÅÏ¢

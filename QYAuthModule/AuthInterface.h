@@ -52,7 +52,7 @@ public:
 
 ///< ------------------------------------------------------------------------------------------------------------
 ///< µ¼³öAPIº¯Êı
-// __declspec(dllexport) I_AuthApi*		__stdcall		GetSingletonAuthApi();
+// __declspec(dllexport) I_AuthApi*		GetSingletonAuthApi();
 
 
 /**

@@ -448,5 +448,42 @@ int MD5::CalMD5(const char in_OldMd5[16], const char * lpInBuf,int iInSize,char 
 
 }
 
+long MD5::ConvertMD5ToStr(const char *pMD5, char *pStr, unsigned long Size)
+{
+	if (pMD5 == NULL || pStr == NULL || Size < 17)
+		return -1;
+
+	sprintf(pStr, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+		pMD5[0] & 0xFF, pMD5[1] & 0xFF, pMD5[2] & 0xFF, pMD5[3] & 0xFF,
+		pMD5[4] & 0xFF, pMD5[5] & 0xFF, pMD5[6] & 0xFF, pMD5[7] & 0xFF, 
+		pMD5[8] & 0xFF, pMD5[9] & 0xFF, pMD5[10] & 0xFF, pMD5[11] & 0xFF, 
+		pMD5[12] & 0xFF, pMD5[13] & 0xFF, pMD5[14] & 0xFF, pMD5[15] & 0xFF);
+
+	return 1;
+}
+
+long MD5::ConvertStrToMD5(const char *pStr, char *pMD5, unsigned long Size)
+{
+	int Tmp[16] = { 0 };
+	int i;
+
+	if (pStr == NULL || pMD5 == NULL || Size < 16)
+		return -1;
+
+	sscanf(pStr, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+		&Tmp[0], &Tmp[1], &Tmp[2], &Tmp[3], &Tmp[4], &Tmp[5], &Tmp[6], &Tmp[7],
+		&Tmp[8], &Tmp[9], &Tmp[10], &Tmp[11], &Tmp[12], &Tmp[13], &Tmp[14], &Tmp[15]);
+
+	for (i = 0; i < 16; i++)
+	{
+		pMD5[i] = (char)(Tmp[i] & 0xFF);
+	}
+
+	return 1;
+}
+
+
+
+
 
 
