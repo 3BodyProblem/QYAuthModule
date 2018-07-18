@@ -140,6 +140,9 @@ int Configuration::Initialize()
 	inifile::IniFile	oIniFile;
 	int					nErrCode = 0;
     char				pszTmp[1024*8] = { 0 };
+	unsigned int		nHiVer = 0;
+	unsigned int		nLoVer = 0;
+	unsigned int		nBuild = 0;
 
 	Release();
     ::GetModuleFileName( g_oModule, pszTmp, sizeof(pszTmp) );
@@ -158,11 +161,22 @@ int Configuration::Initialize()
 	}
 
 	///< 客户端版本，主版本、子版本、Build号，32位各用8、12、12位
-	m_tagAuthConfig.m_nClientVersion = oIniFile.getIntValue( std::string("client"), std::string("version"), nErrCode );
+	nHiVer = oIniFile.getIntValue( std::string("client"), std::string("hversion"), nErrCode );
 	if( 0 != nErrCode )	{
-		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad client version" );
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad client high version" );
 		return -3;
 	}
+	nLoVer = oIniFile.getIntValue( std::string("client"), std::string("lversion"), nErrCode );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad client low version" );
+		return -3;
+	}
+	nBuild = oIniFile.getIntValue( std::string("client"), std::string("bversion"), nErrCode );
+	if( 0 != nErrCode )	{
+		AuthLog::GetLogger().WriteError( "Configuration::Initialize() : invliad client build version" );
+		return -3;
+	}
+	m_tagAuthConfig.m_nClientVersion = ((nHiVer << 24) + (nLoVer << 12) + nBuild);
 
 	///< 券商ID
 	m_tagAuthConfig.m_nCustomerID = oIniFile.getIntValue( std::string("client"), std::string("participantid"), nErrCode );
@@ -214,7 +228,7 @@ int Configuration::Initialize()
 	}
 
 	///< 调试日志
-	m_tagAuthConfig.m_nbIsOutputDebugLog = true;
+	m_tagAuthConfig.m_nbIsOutputDebugLog = false;
 
 	///< 是否使用SSL
 	int	nUseSSL = oIniFile.getIntValue( std::string("server"), std::string("ssl"), nErrCode );

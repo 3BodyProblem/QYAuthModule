@@ -233,7 +233,7 @@ int Authentication::Initialize( I_AuthSessionEvent* pEvent )
 	CriticalLock			lock( m_objLock );
 
 	AuthLog::GetLogger().WriteInfo( "Authentication::Initialize() : enter ..." );
-	if( g_QWinSecurity.Init() ) {
+	if( false == g_QWinSecurity.Init() ) {
 		AuthLog::GetLogger().WriteError( "Authentication::Initialize() : cannot initialize security module." );
 		return -98;
 	}
@@ -343,7 +343,6 @@ void Authentication::SetAccount( const char* User, const char* Password )
 	MD5							oMD5;
 	char						szMd5[16] = { 0 };
 	char						szMd5Password[33] = { 0 };
-	//char						szMd5_2[16] = { 0 };
 	char						outStr[64] = { 0 };
 	char						errMsgA[256] = { 0 };
 	char						ExtraPassword[256] = { 0 };
@@ -356,11 +355,9 @@ void Authentication::SetAccount( const char* User, const char* Password )
 	m_sLoginUser = User;
 	m_sLoginPswd = ExtraPassword;
 	oMD5.CalMD5( Password, strlen(Password), szMd5 );
-	//oMD5.CalMD5("88888888", strlen("88888888"), szMd5_2);
-	MD5::ConvertMD5ToStr(szMd5, szMd5Password, sizeof(szMd5Password));
+	MD5::ConvertMD5ToStr( szMd5, szMd5Password, sizeof(szMd5Password) );
 	m_sLoginMd5Pwd = szMd5Password;
 }
-
 
 int Authentication::ReqLogin( unsigned int nReqNo, const char* pszUser, const char* pszPswd, const char* pszExtraPswd, unsigned int nPswdType )
 {
@@ -412,13 +409,21 @@ int Authentication::ReqChgPassword( unsigned int nReqNo, const char* pszUserID, 
 	}
 
 	if( Authentication::ST_Logined == m_eCurStatus ) {
-		CQAuthChangePassword	tagChgPswd = { 0 };
+		char						outStr[33] = { 0 };
+		char						errMsgA[256] = { 0 };
+		CQAuthChangePassword		tagChgPswd = { 0 };
+		CQWinSecurityInterface*		pQWinSecurity = GetQWinSecurityInterface();
 
+		tagChgPswd.PasswordType = QAUTH_PWDTYPE_MD5;
 		::strncpy( tagChgPswd.User, pszUserID, ::strlen(pszUserID) );
-		::strncpy( tagChgPswd.OldPassword, pszOldPswd, ::strlen(pszOldPswd) );
-		::strncpy( tagChgPswd.NewPassword, pszNewPswd, ::strlen(pszNewPswd) );
-		tagChgPswd.PasswordType = nPswdType;
-		return m_pCQAClientApi->ReqLogout( nReqNo );
+		pQWinSecurity->PBKDF2_SHA256(pszOldPswd, "http://www.iqwin.com.cn", 5, outStr, 32, errMsgA, 256);
+		Bytes2XStr(outStr, 30, tagChgPswd.OldPassword);
+		tagChgPswd.OldPassword[60] = 0;
+		pQWinSecurity->PBKDF2_SHA256(pszNewPswd, "http://www.iqwin.com.cn", 5, outStr, 32, errMsgA, 256);
+		Bytes2XStr(outStr, 30, tagChgPswd.NewPassword);
+		tagChgPswd.NewPassword[60] = 0;
+
+		return m_pCQAClientApi->ReqChangePassword( &tagChgPswd, nReqNo );
 	}
 
 	return -100;
